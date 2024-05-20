@@ -41,3 +41,39 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter/Dart/Pub related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+build/
+
+# Visual Studio Code
+.vscode/
+.idea/
+
+# IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Generated files
+*.apk
+*.aab
+*.app.dSYM/
+*.log
+*.swp
+*.lock
+*.lock/
+
+# Mac
+.DS_Store
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
