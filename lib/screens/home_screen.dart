@@ -17,6 +17,14 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Automatic Phone Silencer'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(text: 'Upcoming'),

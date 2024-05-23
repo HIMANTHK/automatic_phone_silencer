@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/settings_provider.dart';
 import 'providers/alarm_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/settings_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -12,6 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => AlarmProvider()),
       ],
       child: MaterialApp(
@@ -20,6 +23,9 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
         ),
         home: HomeScreen(),
+        routes: {
+          '/settings': (context) => SettingsScreen(),
+        },
       ),
     );
   }
