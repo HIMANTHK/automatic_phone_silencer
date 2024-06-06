@@ -6,6 +6,8 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'dart:convert';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:geolocator/geolocator.dart';
+import '../models/event_model.dart';  // Import the Event model
 
 class AlarmProvider with ChangeNotifier {
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
@@ -47,13 +49,15 @@ class AlarmProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addEvent(String eventName, DateTime eventDate, TimeOfDay startTime, TimeOfDay endTime, String customMessage) async {
+  Future<void> addEvent(String eventName, DateTime eventDate, TimeOfDay startTime, TimeOfDay endTime, String customMessage, double? latitude, double? longitude) async {
     final event = Event(
       eventName: eventName,
       eventDate: eventDate,
       startTime: startTime,
       endTime: endTime,
       customMessage: customMessage,
+      latitude: latitude,
+      longitude: longitude,
     );
     _events.add(event);
     notifyListeners();
@@ -62,7 +66,7 @@ class AlarmProvider with ChangeNotifier {
     await _saveEvents();
   }
 
-  Future<void> updateEvent(Event oldEvent, String eventName, DateTime eventDate, TimeOfDay startTime, TimeOfDay endTime, String customMessage) async {
+  Future<void> updateEvent(Event oldEvent, String eventName, DateTime eventDate, TimeOfDay startTime, TimeOfDay endTime, String customMessage, double? latitude, double? longitude) async {
     final newEvent = Event(
       id: oldEvent.id,
       eventName: eventName,
@@ -70,6 +74,8 @@ class AlarmProvider with ChangeNotifier {
       startTime: startTime,
       endTime: endTime,
       customMessage: customMessage,
+      latitude: latitude,
+      longitude: longitude,
     );
     int index = _events.indexOf(oldEvent);
     if (index != -1) {
@@ -151,51 +157,30 @@ class AlarmProvider with ChangeNotifier {
 
     notifyListeners();
   }
-}
 
-class Event {
-  final int id;
-  final String eventName;
-  final DateTime eventDate;
-  final TimeOfDay startTime;
-  final TimeOfDay endTime;
-  final String customMessage;
+  Future<void> checkLocation(Event event) async {
+    if (event.latitude == null || event.longitude == null) {
+      // No location set for this event
+      updateDeviceStatus();
+      return;
+    }
 
-  Event({
-    required this.eventName,
-    required this.eventDate,
-    required this.startTime,
-    required this.endTime,
-    required this.customMessage,
-    int? id,
-  }) : id = id ?? eventDate.millisecondsSinceEpoch;
-
-  String toJson() {
-    return jsonEncode({
-      'id': id,
-      'eventName': eventName,
-      'eventDate': eventDate.toIso8601String(),
-      'startTime': '${startTime.hour}:${startTime.minute}',
-      'endTime': '${endTime.hour}:${endTime.minute}',
-      'customMessage': customMessage,
-    });
-  }
-
-  factory Event.fromJson(String json) {
-    Map<String, dynamic> data = jsonDecode(json);
-    return Event(
-      id: data['id'],
-      eventName: data['eventName'],
-      eventDate: DateTime.parse(data['eventDate']),
-      startTime: TimeOfDay(
-        hour: int.parse(data['startTime'].split(':')[0]),
-        minute: int.parse(data['startTime'].split(':')[1]),
-      ),
-      endTime: TimeOfDay(
-        hour: int.parse(data['endTime'].split(':')[0]),
-        minute: int.parse(data['endTime'].split(':')[1]),
-      ),
-      customMessage: data['customMessage'],
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    double distanceInMeters = Geolocator.distanceBetween(
+      event.latitude!,
+      event.longitude!,
+      position.latitude,
+      position.longitude,
     );
+
+    if (distanceInMeters <= 500) {
+      // User is within 500 meters of the event location
+      updateDeviceStatus();
+    } else {
+      // User is not within the required distance
+      FlutterRingtonePlayer.stop();
+      _deviceStatus = 'Normal';
+      notifyListeners();
+    }
   }
 }

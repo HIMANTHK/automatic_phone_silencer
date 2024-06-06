@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/event_model.dart';
 import '../providers/alarm_provider.dart';
 import 'package:intl/intl.dart';
+import 'location_picker_screen.dart';
 
 class EventSetupScreen extends StatefulWidget {
   final Event? event;
@@ -19,6 +21,8 @@ class _EventSetupScreenState extends State<EventSetupScreen> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
   String _customMessage = '';
+  double? _latitude;
+  double? _longitude;
 
   @override
   void initState() {
@@ -29,6 +33,8 @@ class _EventSetupScreenState extends State<EventSetupScreen> {
       _startTime = widget.event!.startTime;
       _endTime = widget.event!.endTime;
       _customMessage = widget.event!.customMessage;
+      _latitude = widget.event!.latitude;
+      _longitude = widget.event!.longitude;
     }
   }
 
@@ -88,6 +94,27 @@ class _EventSetupScreenState extends State<EventSetupScreen> {
                   _customMessage = value!;
                 },
               ),
+              ListTile(
+                title: Text('Event Location'),
+                subtitle: _latitude == null || _longitude == null
+                    ? Text('No location selected')
+                    : Text('Lat: $_latitude, Lng: $_longitude'),
+                trailing: Icon(Icons.map),
+                onTap: () async {
+                  final location = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LocationPickerScreen(),
+                    ),
+                  );
+                  if (location != null) {
+                    setState(() {
+                      _latitude = location.latitude;
+                      _longitude = location.longitude;
+                    });
+                  }
+                },
+              ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
@@ -100,6 +127,8 @@ class _EventSetupScreenState extends State<EventSetupScreen> {
                         _startTime!,
                         _endTime!,
                         _customMessage,
+                        _latitude,
+                        _longitude,
                       );
                     } else {
                       alarmProvider.updateEvent(
@@ -109,6 +138,8 @@ class _EventSetupScreenState extends State<EventSetupScreen> {
                         _startTime!,
                         _endTime!,
                         _customMessage,
+                        _latitude,
+                        _longitude,
                       );
                     }
                     Navigator.pop(context);
